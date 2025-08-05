@@ -3,13 +3,11 @@
 #include <string>
 using namespace std;
 
-
 enum class Status {
     ACTIVE,
     MAINTENANCE,
     DECOMMISSIONED
 };
-
 
 string statusToString(Status status) {
     switch (status) {
@@ -20,6 +18,18 @@ string statusToString(Status status) {
     }
 }
 
+// Telemetry Data Structure
+struct TelemetryData {
+    double latitude;
+    double longitude;
+    double speed;
+    string engineStatus; // On, Off, Idle
+    int fuelLevel;       // percentage
+    int odometer;        // in km
+    string diagnosticCode;
+    string timestamp;
+};
+
 class Vehicle {
 public:
     string vin;
@@ -28,14 +38,25 @@ public:
     string fleet_id;
     string owner;
     Status status;
+    TelemetryData telemetry;
 
     void display() const {
         cout << "VIN: " << vin << ", Manufacturer: " << manufacturer
              << ", Model: " << model << ", Fleet: " << fleet_id
              << ", Owner: " << owner << ", Status: " << statusToString(status) << endl;
     }
-};
 
+    void displayTelemetry() const {
+        cout << "--- Telemetry Data ---\n";
+        cout << "Location: (" << telemetry.latitude << ", " << telemetry.longitude << ")\n";
+        cout << "Speed: " << telemetry.speed << " km/h\n";
+        cout << "Engine Status: " << telemetry.engineStatus << endl;
+        cout << "Fuel Level: " << telemetry.fuelLevel << "%\n";
+        cout << "Odometer: " << telemetry.odometer << " km\n";
+        cout << "Diagnostic Code: " << telemetry.diagnosticCode << endl;
+        cout << "Timestamp: " << telemetry.timestamp << endl;
+    }
+};
 
 class VehicleManager {
 private:
@@ -144,6 +165,46 @@ public:
 
         cout << "Vehicle updated successfully.\n";
     }
+
+    void updateTelemetry() {
+        string vin;
+        cout << "Enter VIN to update telemetry: ";
+        cin >> vin;
+
+        auto it = vehicles.find(vin);
+        if (it == vehicles.end()) {
+            cout << "Vehicle not found.\n";
+            return;
+        }
+
+        TelemetryData t;
+        cout << "Enter Latitude: "; cin >> t.latitude;
+        cout << "Enter Longitude: "; cin >> t.longitude;
+        cout << "Enter Speed (km/h): "; cin >> t.speed;
+        cout << "Enter Engine Status (On/Off/Idle): "; cin >> t.engineStatus;
+        cout << "Enter Fuel/Battery Level (%): "; cin >> t.fuelLevel;
+        cout << "Enter Odometer Reading (km): "; cin >> t.odometer;
+        cout << "Enter Diagnostic Code (or 'None'): "; cin.ignore(); getline(cin, t.diagnosticCode);
+        cout << "Enter Timestamp (e.g., 2025-08-05 10:00): "; getline(cin, t.timestamp);
+
+        it->second.telemetry = t;
+
+        cout << "Telemetry updated successfully!\n";
+    }
+
+    void displayTelemetry() const {
+        string vin;
+        cout << "Enter VIN to display telemetry: ";
+        cin >> vin;
+
+        auto it = vehicles.find(vin);
+        if (it == vehicles.end()) {
+            cout << "Vehicle not found.\n";
+            return;
+        }
+
+        it->second.displayTelemetry();
+    }
 };
 
 int main() {
@@ -157,6 +218,8 @@ int main() {
         cout << "3. Remove Vehicle\n";
         cout << "4. Search Vehicle\n";
         cout << "5. Update Vehicle\n";
+        cout << "6. Update Telemetry Data\n";
+        cout << "7. Display Vehicle Telemetry\n";
         cout << "0. Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
@@ -167,9 +230,10 @@ int main() {
             case 3: manager.removeVehicle(); break;
             case 4: manager.searchVehicle(); break;
             case 5: manager.updateVehicle(); break;
+            case 6: manager.updateTelemetry(); break;
+            case 7: manager.displayTelemetry(); break;
             case 0: return 0;
             default: cout << "Invalid choice. Try again.\n";
-
         }
     }
 }
